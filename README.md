@@ -1,4 +1,4 @@
-# Capistrano::Strategy::JenkinsArtifact
+# Capistrano::Strategy::JenkinsArtifact [![Build Status][travis-badge]][travis-url]
 
 Capistrano 2 strategy that uses Jenkins' artifact as a distribution provider.
 
@@ -35,3 +35,6 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/aereal
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
 
+
+[travis-url]: https://travis-ci.org/aereal/capistrano-strategy-jenkins_artifact
+[travis-badge]: https://travis-ci.org/aereal/capistrano-strategy-jenkins_artifact.svg?branch=master
