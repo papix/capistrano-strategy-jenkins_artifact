@@ -1,7 +1,7 @@
 module Capistrano
   module Deploy
     module Strategy
-      module JenkinsArtifact
+      class JenkinsArtifact
         VERSION = "0.1.0"
       end
     end
