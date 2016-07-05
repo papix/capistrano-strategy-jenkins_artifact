@@ -1,11 +1,7 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'capistrano/strategy/jenkins_artifact/version'
-
 Gem::Specification.new do |spec|
   spec.name          = "capistrano-strategy-jenkins_artifact"
-  spec.version       = Capistrano::Strategy::JenkinsArtifact::VERSION
+  spec.version       = "0.1.0"
   spec.authors       = ["aereal"]
   spec.email         = ["aereal@aereal.org"]
 
