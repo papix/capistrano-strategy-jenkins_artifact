@@ -15,8 +15,7 @@ class ::JenkinsApi::Client::Job
     job_path              = "job/#{path_encode job_name}/"
     response_json         = @client.api_get_request("/#{job_path}#{current_build_number}")
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
-      logger.important "Specified artifact not found in curent_build !!"
-      abort
+      abort "Specified artifact not found in curent_build !!"
     end
     jenkins_path          = response_json['url']
     artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_path}")
