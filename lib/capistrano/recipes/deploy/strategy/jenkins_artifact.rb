@@ -1,5 +1,3 @@
-require "capistrano/recipes/deploy/strategy/jenkins_artifact/version"
-
 require 'uri'
 
 require 'capistrano/recipes/deploy/strategy/base'
