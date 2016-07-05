@@ -1,4 +1,7 @@
 require 'test_helper'
 
-class Capistrano::Deploy::Strategy::JenkinsArtifactTest < Minitest::Test
+class Capistrano::Strategy::JenkinsArtifactTest < Minitest::Test
+  def test_that_it_has_a_version_number
+    refute_nil ::Capistrano::Strategy::JenkinsArtifact::VERSION
+  end
 end
