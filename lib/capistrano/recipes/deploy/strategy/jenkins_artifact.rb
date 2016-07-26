@@ -26,12 +26,11 @@ end
 class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::Strategy::Base
   def deploy!
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
-    artifact_relative_path = fetch(:artifact_relative_path)
     client = JenkinsApi::Client.new(server_url: jenkins_origin.to_s)
     set(:artifact_url) do
       uri = ''
-      if artifact_relative_path
-        uri = client.job.find_artifact_with_path(fetch(:build_project), artifact_relative_path)
+      if exists?(:artifact_relative_path)
+        uri = client.job.find_artifact_with_path(fetch(:build_project), fetch(:artifact_relative_path))
       else
         uri = client.job.find_artifact(fetch(:build_project))
       end
