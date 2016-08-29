@@ -4,16 +4,24 @@ require 'capistrano/recipes/deploy/strategy/base'
 require 'jenkins_api_client'
 
 class ::JenkinsApi::Client::Job
-  def get_last_successful_build_number(job_name, branch)
+  def get_last_successful_build_number(job_name, branch, is_multibranch)
     @logger.info "Obtaining last successful build number of #{job_name}"
-    res = @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
+    res = if is_multibranch && ! branch.empty?
+        @client.api_get_request("/job/#{path_encode job_name}/job/#{path_encode branch}/lastSuccessfulBuild")
+    else
+        @client.api_get_request("/job/#{path_encode job_name}/lastSuccessfulBuild")
+    end
     res['number']
   end
 
-  def find_artifact_with_path(job_name, relative_path)
-    current_build_number  = get_current_build_number(job_name)
-    job_path              = "job/#{path_encode job_name}/"
-    response_json         = @client.api_get_request("/#{job_path}#{current_build_number}")
+  def find_artifact_with_path(job_name, relative_path, branch, is_multibranch)
+    current_build_number  = get_last_successful_build_number(job_name, branch, is_multibranch)
+    job_path              = if is_multibranch && ! branch.empty?
+      "job/#{path_encode job_name}/job/#{path_encode branch}"
+    else
+      "job/#{path_encode job_name}"
+    end
+    response_json         = @client.api_get_request("/#{job_path}/#{current_build_number}")
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
       abort "Specified artifact not found in curent_build !!"
     end
@@ -30,7 +38,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     set(:artifact_url) do
       uri = ''
       if exists?(:artifact_relative_path)
-        uri = client.job.find_artifact_with_path(fetch(:build_project), fetch(:artifact_relative_path))
+        uri = client.job.find_artifact_with_path(fetch(:build_project), fetch(:artifact_relative_path), fetch(:branch), fetch(:is_multibranch))
       else
         uri = client.job.find_artifact(fetch(:build_project))
       end
@@ -42,7 +50,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       }.to_s
     end
 
-    build_num = client.job.get_last_successful_build_number(fetch(:build_project), "origin/#{fetch(:branch)}")
+    build_num = client.job.get_last_successful_build_number(fetch(:build_project), fetch(:branch), fetch(:is_multibranch))
     timestamp = client.job.get_build_details(fetch(:build_project), build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
