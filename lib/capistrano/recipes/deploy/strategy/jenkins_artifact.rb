@@ -25,16 +25,18 @@ end
 
 class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::Strategy::Base
   def deploy!
+    dir_name = exists?(:is_multibranch_job) && fetch(:is_multibranch_job) ? fetch(:branch) : fetch(:build_project)
+
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
     client = JenkinsApi::Client.new(server_url: jenkins_origin.to_s)
     set(:artifact_url) do
       uri = ''
       if exists?(:artifact_relative_path)
-        uri = client.job.find_artifact_with_path(fetch(:build_project), fetch(:artifact_relative_path))
+        uri = client.job.find_artifact_with_path(dir_name, fetch(:artifact_relative_path))
       else
-        uri = client.job.find_artifact(fetch(:build_project))
+        uri = client.job.find_artifact(dir_name)
       end
-      abort "No artifact found for #{fetch(:build_project)}" if uri.empty?
+      abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
         uri.scheme = jenkins_origin.scheme
         uri.host = jenkins_origin.host
@@ -42,8 +44,8 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       }.to_s
     end
 
-    build_num = client.job.get_last_successful_build_number(fetch(:build_project), "origin/#{fetch(:branch)}")
-    timestamp = client.job.get_build_details(fetch(:build_project), build_num)['timestamp']
+    build_num = client.job.get_last_successful_build_number(dir_name, "origin/#{fetch(:branch)}")
+    timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
     set(:release_name, deploy_at.strftime('%Y%m%d%H%M%S'))

@@ -22,7 +22,19 @@ Or install it yourself as:
 
 In your `Capfile` (`config/deploy.rb`, or `config/deploy/**/*.rb`):
 
+### General job
+
 ```ruby
+set :jenkins_origin, URI.parse('http://ci.example.com')
+set :build_project, 'build-artifact-job'
+set :deploy_via, :jenkins_artifact
+```
+
+### Multibranch job
+
+```ruby
+set :jenkins_origin, URI.parse('http://ci.example.com/job/multibranch-job')
+set :is_multibranch_job, true
 set :deploy_via, :jenkins_artifact
 ```
 
