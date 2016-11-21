@@ -48,6 +48,14 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
+    compression_switch = case fetch(:artifact_compression_type, :bzip2)
+                       when :gzip  then 'z'
+                       when :bzip2 then 'j'
+                       when :xz    then 'J'
+                       when :raw   then '' # raw tarball
+                       else abort "Invalid compression type: #{fetch(:artifact_compression_type)}"
+                     end
+
     set(:release_name, deploy_at.strftime('%Y%m%d%H%M%S'))
     set(:release_path, "#{fetch(:releases_path)}/#{fetch(:release_name)}")
     set(:latest_release, fetch(:release_path))
@@ -55,7 +63,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     run <<-SCRIPT
       mkdir -p #{fetch(:release_path)} && \
       (curl -s #{fetch(:artifact_url)} | \
-      tar --strip-components=1 -C #{fetch(:release_path)} -jxf -)
+      tar --strip-components=1 -C #{fetch(:release_path)} -#{compression_switch}xf -)
     SCRIPT
   end
 end
