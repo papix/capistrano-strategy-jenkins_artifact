@@ -4,7 +4,7 @@ require 'capistrano/recipes/deploy/strategy/base'
 require 'jenkins_api_client'
 
 class ::JenkinsApi::Client::Job
-  def get_last_successful_build_number(job_name, branch)
+  def get_last_successful_build_number(job_name)
     @logger.info "Obtaining last successful build number of #{job_name}"
     res = @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
     res['number']
