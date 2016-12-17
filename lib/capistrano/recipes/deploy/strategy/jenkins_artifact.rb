@@ -44,7 +44,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       }.to_s
     end
 
-    build_num = client.job.get_last_successful_build_number(dir_name, "origin/#{fetch(:branch)}")
+    build_num = client.job.get_last_successful_build_number(dir_name)
     timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
