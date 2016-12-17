@@ -24,6 +24,32 @@ class ::JenkinsApi::Client::Job
 end
 
 class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::Strategy::Base
+
+  def _guess_compression_type(filename)
+    case filename.downcase
+    when /\.tar\.gz$/, /\.tgz$/
+      :gzip
+    when /\.tar\.bz2$/, /\.tbz$/
+      :bzip2
+    when /\.tar\.xz$/, /\.txz$/
+      :xz
+    when /\.tar$/
+      :raw
+    else
+      :bzip2
+    end
+  end
+
+  def _compression_type_to_switch(type)
+    case type
+    when :gzip  then 'z'
+    when :bzip2 then 'j'
+    when :xz    then 'J'
+    when :raw   then '' # raw tarball
+    else abort "Invalid compression type: #{type}"
+    end
+  end
+
   def deploy!
     dir_name = exists?(:is_multibranch_job) && fetch(:is_multibranch_job) ? fetch(:branch) : fetch(:build_project)
 
@@ -48,13 +74,11 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
-    compression_switch = case fetch(:artifact_compression_type, :bzip2)
-                       when :gzip  then 'z'
-                       when :bzip2 then 'j'
-                       when :xz    then 'J'
-                       when :raw   then '' # raw tarball
-                       else abort "Invalid compression type: #{fetch(:artifact_compression_type)}"
-                     end
+    compression_type = fetch(
+      :artifact_compression_type,
+      _guess_compression_type(fetch(:artifact_url))
+    )
+    compression_switch = _compression_type_to_switch(compression_type)
 
     set(:release_name, deploy_at.strftime('%Y%m%d%H%M%S'))
     set(:release_path, "#{fetch(:releases_path)}/#{fetch(:release_name)}")
