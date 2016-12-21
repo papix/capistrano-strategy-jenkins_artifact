@@ -4,7 +4,7 @@ require 'capistrano/recipes/deploy/strategy/base'
 require 'jenkins_api_client'
 
 class ::JenkinsApi::Client::Job
-  def get_last_successful_build_number(job_name, branch)
+  def get_last_successful_build_number(job_name)
     @logger.info "Obtaining last successful build number of #{job_name}"
     res = @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
     res['number']
@@ -44,7 +44,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       }.to_s
     end
 
-    build_num = client.job.get_last_successful_build_number(dir_name, "origin/#{fetch(:branch)}")
+    build_num = client.job.get_last_successful_build_number(dir_name)
     timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
     deploy_at = Time.at(timestamp / 1000)
 
