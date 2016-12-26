@@ -71,7 +71,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       if exists?(:artifact_relative_path)
         uri = client.job.find_artifact_with_path(dir_name, fetch(:artifact_relative_path))
       else
-        uri = client.job.find_artifact(dir_name)
+        uri = client.job.find_last_successful_artifact(dir_name)
       end
       abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
