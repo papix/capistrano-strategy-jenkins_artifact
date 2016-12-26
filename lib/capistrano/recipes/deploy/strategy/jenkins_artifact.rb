@@ -16,14 +16,20 @@ class ::JenkinsApi::Client::Job
   end
 
   def find_artifact_with_path(job_name, relative_path)
-    current_build_number  = get_current_build_number(job_name)
-    job_path              = "job/#{path_encode job_name}/"
-    response_json         = @client.api_get_request("/#{job_path}#{current_build_number}")
+    response_json = get_last_successful_build(job_name)
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
       abort "Specified artifact not found in curent_build !!"
     end
     jenkins_path          = response_json['url']
     artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_path}")
+    return artifact_path
+  end
+
+  def find_last_successful_artifact(job_name)
+    last_successful_build  = get_last_successful_build(job_name)
+    relative_build_path   = last_successful_build['artifacts'][0]['relativePath']
+    jenkins_path          = last_successful_build['url']
+    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
     return artifact_path
   end
 end
