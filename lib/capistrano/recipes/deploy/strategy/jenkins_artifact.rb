@@ -19,9 +19,12 @@ class ::JenkinsApi::Client::Job
     return artifact_path
   end
 
-  def find_last_successful_artifact(job_name)
+  def find_last_successful_artifact(job_name, &finder)
+    finder ||= ->(_) { true }
     last_successful_build  = get_last_successful_build(job_name)
-    relative_build_path   = last_successful_build['artifacts'][0]['relativePath']
+    matched_artifact   = last_successful_build['artifacts'].find(&finder)
+    raise 'Specified artifact not found in current build !!' unless matched_artifact
+    relative_build_path = matched_artifact['relativePath']
     jenkins_path          = last_successful_build['url']
     artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
     return artifact_path
