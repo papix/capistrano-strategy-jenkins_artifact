@@ -15,7 +15,7 @@ class ::JenkinsApi::Client::Job
     res['number']
   end
 
-  def find_artifact_with_path(job_name, relative_path)
+  def find_last_successful_artifact_with_path(job_name, relative_path)
     response_json = get_last_successful_build(job_name)
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
       abort "Specified artifact not found in curent_build !!"
@@ -69,7 +69,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     set(:artifact_url) do
       uri = ''
       if exists?(:artifact_relative_path)
-        uri = client.job.find_artifact_with_path(dir_name, fetch(:artifact_relative_path))
+        uri = client.job.find_last_successful_artifact_with_path(dir_name, fetch(:artifact_relative_path))
       else
         uri = client.job.find_last_successful_artifact(dir_name)
       end
