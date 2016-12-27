@@ -4,21 +4,26 @@ require 'capistrano/recipes/deploy/strategy/base'
 require 'jenkins_api_client'
 
 class ::JenkinsApi::Client::Job
-  def get_last_successful_build_number(job_name)
+  def get_last_successful_build(job_name)
     @logger.info "Obtaining last successful build number of #{job_name}"
-    res = @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
-    res['number']
+    @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
   end
 
-  def find_artifact_with_path(job_name, relative_path)
-    current_build_number  = get_current_build_number(job_name)
-    job_path              = "job/#{path_encode job_name}/"
-    response_json         = @client.api_get_request("/#{job_path}#{current_build_number}")
+  def find_last_successful_artifact_with_path(job_name, relative_path)
+    response_json = get_last_successful_build(job_name)
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
       abort "Specified artifact not found in curent_build !!"
     end
     jenkins_path          = response_json['url']
     artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_path}")
+    return artifact_path
+  end
+
+  def find_last_successful_artifact(job_name)
+    last_successful_build  = get_last_successful_build(job_name)
+    relative_build_path   = last_successful_build['artifacts'][0]['relativePath']
+    jenkins_path          = last_successful_build['url']
+    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
     return artifact_path
   end
 end
@@ -58,9 +63,9 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     set(:artifact_url) do
       uri = ''
       if exists?(:artifact_relative_path)
-        uri = client.job.find_artifact_with_path(dir_name, fetch(:artifact_relative_path))
+        uri = client.job.find_last_successful_artifact_with_path(dir_name, fetch(:artifact_relative_path))
       else
-        uri = client.job.find_artifact(dir_name)
+        uri = client.job.find_last_successful_artifact(dir_name)
       end
       abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
@@ -70,9 +75,8 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       }.to_s
     end
 
-    build_num = client.job.get_last_successful_build_number(dir_name)
-    timestamp = client.job.get_build_details(dir_name, build_num)['timestamp']
-    deploy_at = Time.at(timestamp / 1000)
+    last_successful_build = client.job.get_last_successful_build(dir_name)
+    deploy_at = Time.at(last_successful_build['timestamp'] / 1000)
 
     compression_type = fetch(
       :artifact_compression_type,
