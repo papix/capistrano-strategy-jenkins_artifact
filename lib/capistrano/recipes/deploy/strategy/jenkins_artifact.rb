@@ -9,16 +9,6 @@ class ::JenkinsApi::Client::Job
     @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
   end
 
-  def find_last_successful_artifact_with_path(job_name, relative_path)
-    response_json = get_last_successful_build(job_name)
-    if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
-      abort "Specified artifact not found in curent_build !!"
-    end
-    jenkins_path          = response_json['url']
-    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_path}")
-    return artifact_path
-  end
-
   def find_last_successful_artifact(job_name, &finder)
     finder ||= ->(_) { true }
     last_successful_build  = get_last_successful_build(job_name)
@@ -64,12 +54,10 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
     client = JenkinsApi::Client.new(server_url: jenkins_origin.to_s)
     set(:artifact_url) do
-      uri = ''
-      if exists?(:artifact_relative_path)
-        uri = client.job.find_last_successful_artifact_with_path(dir_name, fetch(:artifact_relative_path))
-      else
-        uri = client.job.find_last_successful_artifact(dir_name)
-      end
+      artifact_finder = exists?(:artifact_relative_path) ?
+        ->(artifact) { artifact['relativePath'] == fetch(:artifact_relative_path) } :
+        ->(artifact) { true }
+      uri = client.job.find_last_successful_artifact(dir_name, &artifact_finder)
       abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
         uri.scheme = jenkins_origin.scheme
