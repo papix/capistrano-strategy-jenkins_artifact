@@ -9,12 +9,6 @@ class ::JenkinsApi::Client::Job
     @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
   end
 
-  def get_last_successful_build_number(job_name)
-    @logger.info "Obtaining last successful build number of #{job_name}"
-    res = @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
-    res['number']
-  end
-
   def find_last_successful_artifact_with_path(job_name, relative_path)
     response_json = get_last_successful_build(job_name)
     if response_json['artifacts'].none? {|a| a['relativePath'] == relative_path }
