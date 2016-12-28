@@ -4,20 +4,19 @@ require 'capistrano/recipes/deploy/strategy/base'
 require 'jenkins_api_client'
 
 class ::JenkinsApi::Client::Job
+  def self.get_artifact_url_by_build(build, &finder)
+    finder ||= ->(_) { true }
+    matched_artifact   = build['artifacts'].find(&finder)
+    raise 'Specified artifact not found in current build !!' unless matched_artifact
+    relative_build_path = matched_artifact['relativePath']
+    jenkins_path          = build['url']
+    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
+    return artifact_path
+  end
+
   def get_last_successful_build(job_name)
     @logger.info "Obtaining last successful build number of #{job_name}"
     @client.api_get_request("/job/#{path_encode(job_name)}/lastSuccessfulBuild")
-  end
-
-  def find_last_successful_artifact(job_name, &finder)
-    finder ||= ->(_) { true }
-    last_successful_build  = get_last_successful_build(job_name)
-    matched_artifact   = last_successful_build['artifacts'].find(&finder)
-    raise 'Specified artifact not found in current build !!' unless matched_artifact
-    relative_build_path = matched_artifact['relativePath']
-    jenkins_path          = last_successful_build['url']
-    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
-    return artifact_path
   end
 end
 
@@ -53,11 +52,15 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
 
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
     client = JenkinsApi::Client.new(server_url: jenkins_origin.to_s)
+
+    last_successful_build = client.job.get_last_successful_build(dir_name)
+    deploy_at = Time.at(last_successful_build['timestamp'] / 1000)
+
     set(:artifact_url) do
       artifact_finder = exists?(:artifact_relative_path) ?
         ->(artifact) { artifact['relativePath'] == fetch(:artifact_relative_path) } :
         ->(artifact) { true }
-      uri = client.job.find_last_successful_artifact(dir_name, &artifact_finder)
+      uri = JenkinsApi::Client::Job.get_artifact_url_by_build(last_successful_build, &artifact_finder)
       abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
         uri.scheme = jenkins_origin.scheme
@@ -65,9 +68,6 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
         uri.port = jenkins_origin.port
       }.to_s
     end
-
-    last_successful_build = client.job.get_last_successful_build(dir_name)
-    deploy_at = Time.at(last_successful_build['timestamp'] / 1000)
 
     compression_type = fetch(
       :artifact_compression_type,
