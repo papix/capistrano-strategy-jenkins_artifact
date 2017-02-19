@@ -84,6 +84,12 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     )
     compression_switch = _compression_type_to_switch(compression_type)
 
+    tar_opts = []
+    strip_level = fetch(:artifact_strip_level, 1)
+    if strip_level && strip_level > 0
+      tar_opts << "--strip-components=#{strip_level}"
+    end
+
     set(:release_name, deploy_at.strftime('%Y%m%d%H%M%S'))
     set(:release_path, "#{fetch(:releases_path)}/#{fetch(:release_name)}")
     set(:latest_release, fetch(:release_path))
@@ -91,7 +97,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     run <<-SCRIPT
       mkdir -p #{fetch(:release_path)} && \
       (curl -s #{fetch(:artifact_url)} | \
-      tar --strip-components=1 -C #{fetch(:release_path)} -#{compression_switch}xf -)
+      tar #{tar_opts.join(' ')} -C #{fetch(:release_path)} -#{compression_switch}xf -)
     SCRIPT
   end
 end
