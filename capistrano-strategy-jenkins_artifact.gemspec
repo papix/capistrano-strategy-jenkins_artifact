@@ -1,7 +1,7 @@
 # coding: utf-8
 Gem::Specification.new do |spec|
   spec.name          = "capistrano-strategy-jenkins_artifact"
-  spec.version       = "0.2.1"
+  spec.version       = "0.2.2"
   spec.authors       = ["aereal"]
   spec.email         = ["aereal@aereal.org"]
 
