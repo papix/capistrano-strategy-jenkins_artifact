@@ -38,6 +38,30 @@ set :is_multibranch_job, true
 set :deploy_via, :jenkins_artifact
 ```
 
+## Options
+
+| name | type | required? | default value |
+| ---- | ---- | --------- | ------------- |
+| `jenkins_origin` | String | **Y** | N/A |
+| `build_project` | String | **Y** | N/A |
+| `is_multibranch_job` | Boolean | n | `nil` |
+| `artifact_relative_path` | String | n | `nil` |
+| `artifact_compression_type` | (see below) | n | guessed by artifact URL |
+| `artifact_strip_level` | Numeric | n | `1` |
+
+### Supported compression types
+
+* gzip
+* bzip2
+* xz
+* raw
+
+## Options exposed by capistrano-strategy-jenkins_artifact
+
+| name | type |
+| ---- | ---- |
+| `artifact_url` | String |
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/aereal/capistrano-strategy-jenkins_artifact.
