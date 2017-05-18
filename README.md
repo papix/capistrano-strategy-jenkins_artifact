@@ -48,7 +48,7 @@ set :deploy_via, :jenkins_artifact
 | `artifact_relative_path` | String | n | `nil` |
 | `artifact_compression_type` | (see below) | n | guessed by artifact URL |
 | `artifact_strip_level` | Numeric | n | `1` |
-| `release_name_from` | (see below) | n | `'build_at'` |
+| `release_name_from` | (see below) | n | `:build_at` |
 
 ### Supported compression types
 
@@ -59,10 +59,10 @@ set :deploy_via, :jenkins_artifact
 
 ### `release_name_from` option
 
-You can set either `'build_at'` (default) or `'deploy_at'` to this option.
+You can set either `:build_at` (default) or `:deploy_at` to this option.
 
 By default, this storategy will set release_name from the artifact's build timestamp.  This behavior is different from Capistrano's default.
-If you prefer Capistrano's default behavior (use current timestamp for release_name), set this option to `'deploy_at'`.
+If you prefer Capistrano's default behavior (use current timestamp for release_name), set this option to `:deploy_at`.
 
 ## Options exposed by capistrano-strategy-jenkins_artifact
 

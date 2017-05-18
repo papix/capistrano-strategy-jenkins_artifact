@@ -50,9 +50,9 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
   def deploy!
     dir_name = exists?(:is_multibranch_job) && fetch(:is_multibranch_job) ? fetch(:branch) : fetch(:build_project)
 
-    release_name_from = fetch(:release_name_from, 'build_at')
-    if release_name_from != 'build_at' && release_name_from != 'deploy_at' then
-      abort ':release_name_from must be either `build_at` or `deploy_at`'
+    release_name_from = fetch(:release_name_from, :build_at)
+    if release_name_from != :build_at && release_name_from != :deploy_at then
+      abort ':release_name_from must be either `:build_at` or `:deploy_at`'
     end
 
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
@@ -86,7 +86,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       tar_opts << "--strip-components=#{strip_level}"
     end
 
-    if release_name_from == 'build_at' then
+    if release_name_from == :build_at then
       set(:release_name, build_at.strftime('%Y%m%d%H%M%S'))
     end
     set(:release_path, "#{fetch(:releases_path)}/#{fetch(:release_name)}")
