@@ -59,10 +59,10 @@ set :deploy_via, :jenkins_artifact
 
 ### `release_name_from` option
 
-You can set either `'build_at'`(default) or `'deploy_at'` to this option.
+You can set either `'build_at'` (default) or `'deploy_at'` to this option.
 
-By default, this storategy will set release_name from the artifact's build timestamp.  This behaviour is different from capistrano's default behaviour.
-If you prefer capistrano's default behaviour(use current timestamp for release_name), set this option to `'deploy_at'`.
+By default, this storategy will set release_name from the artifact's build timestamp.  This behavior is different from Capistrano's default.
+If you prefer Capistrano's default behavior (use current timestamp for release_name), set this option to `'deploy_at'`.
 
 ## Options exposed by capistrano-strategy-jenkins_artifact
 
