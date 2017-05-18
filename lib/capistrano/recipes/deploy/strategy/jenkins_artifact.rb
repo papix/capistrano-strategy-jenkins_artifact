@@ -51,7 +51,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     dir_name = exists?(:is_multibranch_job) && fetch(:is_multibranch_job) ? fetch(:branch) : fetch(:build_project)
 
     release_name_from = fetch(:release_name_from, :build_at)
-    if release_name_from != :build_at && release_name_from != :deploy_at then
+    if release_name_from != :build_at && release_name_from != :deploy_at
       abort ':release_name_from must be either `:build_at` or `:deploy_at`'
     end
 
@@ -86,7 +86,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       tar_opts << "--strip-components=#{strip_level}"
     end
 
-    if release_name_from == :build_at then
+    if release_name_from == :build_at
       set(:release_name, build_at.strftime('%Y%m%d%H%M%S'))
     end
     set(:release_path, "#{fetch(:releases_path)}/#{fetch(:release_name)}")
