@@ -1,4 +1,4 @@
-# Capistrano::Strategy::JenkinsArtifact [![Build Status][travis-badge]][travis-url]
+# Capistrano::Strategy::JenkinsArtifact [![Build Status][travis-badge]][travis-url] [![Gem Version](https://badge.fury.io/rb/capistrano-strategy-jenkins_artifact.svg)](https://badge.fury.io/rb/capistrano-strategy-jenkins_artifact)
 
 Capistrano 2 strategy that uses Jenkins' artifact as a distribution provider.
 
