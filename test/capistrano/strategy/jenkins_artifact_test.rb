@@ -2,12 +2,13 @@ require 'test_helper'
 
 require 'webmock/minitest'
 require 'json'
+require 'uri'
 
 require 'capistrano/recipes/deploy/strategy/jenkins_artifact'
 
 class Capistrano::Deploy::Strategy::JenkinsArtifactTest < Minitest::Test
   def test_get_last_successful_build
-    jenkins_origin = 'http://example.com'
+    jenkins_origin = URI.parse('http://example.com')
     job = 'example-job'
     stub_get = stub_request(:get, "#{jenkins_origin}/job/#{job}/lastSuccessfulBuild/api/json").
       to_return(
@@ -27,16 +28,15 @@ class Capistrano::Deploy::Strategy::JenkinsArtifactTest < Minitest::Test
   end
 
   def test_get_last_successful_build_fail
-    jenkins_origin = 'http://example.com'
+    jenkins_origin = URI.parse('http://example.com')
     job = 'example-job'
     stub_get = stub_request(:get, "#{jenkins_origin}/job/#{job}/lastSuccessfulBuild/api/json").
       to_return(
         body: 'Internal Server Error',
         status: 500,
       )
-    assert_raises(JenkinsApi::Exceptions::InternalServerError) {
-      Capistrano::Deploy::Strategy::JenkinsArtifact::ApiClient.get_last_successful_build(jenkins_origin, job)
-    }
+    build = Capistrano::Deploy::Strategy::JenkinsArtifact::ApiClient.get_last_successful_build(jenkins_origin, job)
+    assert_nil(build)
     assert_requested(stub_get)
   end
 end
