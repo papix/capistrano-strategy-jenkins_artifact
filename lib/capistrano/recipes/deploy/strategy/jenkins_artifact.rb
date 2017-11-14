@@ -21,6 +21,12 @@ class ::JenkinsApi::Client::Job
 end
 
 class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::Strategy::Base
+  module ApiClient
+    def self.get_last_successful_build(jenkins_origin, dir_name)
+      client = JenkinsApi::Client.new(server_url: jenkins_origin)
+      client.job.get_last_successful_build(dir_name)
+    end
+  end
 
   def _guess_compression_type(filename)
     case filename.downcase
@@ -56,9 +62,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
     end
 
     jenkins_origin = fetch(:jenkins_origin) or abort ":jenkins_origin configuration must be defined"
-    client = JenkinsApi::Client.new(server_url: jenkins_origin.to_s)
-
-    last_successful_build = client.job.get_last_successful_build(dir_name)
+    last_successful_build = ApiClient.get_last_successful_build(jenkins_origin.to_s, dir_name)
     build_at = Time.at(last_successful_build['timestamp'] / 1000)
 
     set(:artifact_url) do
