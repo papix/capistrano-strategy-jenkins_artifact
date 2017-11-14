@@ -2,19 +2,6 @@ require 'uri'
 require 'net/https'
 
 require 'capistrano/recipes/deploy/strategy/base'
-require 'jenkins_api_client'
-
-class ::JenkinsApi::Client::Job
-  def self.get_artifact_url_by_build(build, &finder)
-    finder ||= ->(_) { true }
-    matched_artifact   = build['artifacts'].find(&finder)
-    raise 'Specified artifact not found in current build !!' unless matched_artifact
-    relative_build_path = matched_artifact['relativePath']
-    jenkins_path          = build['url']
-    artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
-    return artifact_path
-  end
-end
 
 class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::Strategy::Base
   module ApiClient
@@ -34,6 +21,18 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
           JSON.parse(res.body)
         end
       end
+    end
+  end
+
+  module Helpers
+    def self.get_artifact_url_by_build(build, &finder)
+      finder ||= ->(_) { true }
+      matched_artifact   = build['artifacts'].find(&finder)
+      raise 'Specified artifact not found in current build !!' unless matched_artifact
+      relative_build_path = matched_artifact['relativePath']
+      jenkins_path          = build['url']
+      artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
+      return artifact_path
     end
   end
 
@@ -78,7 +77,7 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
       artifact_finder = exists?(:artifact_relative_path) ?
         ->(artifact) { artifact['relativePath'] == fetch(:artifact_relative_path) } :
         ->(artifact) { true }
-      uri = JenkinsApi::Client::Job.get_artifact_url_by_build(last_successful_build, &artifact_finder)
+      uri = Helpers.get_artifact_url_by_build(last_successful_build, &artifact_finder)
       abort "No artifact found for #{dir_name}" if uri.empty?
       URI.parse(uri).tap {|uri|
         uri.scheme = jenkins_origin.scheme

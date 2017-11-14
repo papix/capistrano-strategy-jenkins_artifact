@@ -39,4 +39,20 @@ class Capistrano::Deploy::Strategy::JenkinsArtifactTest < Minitest::Test
     assert_nil(build)
     assert_requested(stub_get)
   end
+
+  def test_get_artifact_url_by_build
+    build = {
+      'artifacts' => [
+        { 'displayPath' => 'artifact.tar.gz', 'fileName' => 'artifact.tar.gz', 'relativePath' => 'artifact.tar.gz' },
+        { 'displayPath' => 'another.tar.gz',  'fileName' => 'another.tar.gz',  'relativePath' => 'another.tar.gz' },
+      ],
+      'url' => 'http://example.com/',
+    }
+
+    got_artifact_path = Capistrano::Deploy::Strategy::JenkinsArtifact::Helpers.get_artifact_url_by_build(build)
+    assert_match %r{\bartifact\.tar\.gz\z}, got_artifact_path
+
+    got_artifact_path = Capistrano::Deploy::Strategy::JenkinsArtifact::Helpers.get_artifact_url_by_build(build) {|artifact| artifact['relativePath'] == 'another.tar.gz' }
+    assert_match %r{\banother\.tar\.gz\z}, got_artifact_path
+  end
 end
