@@ -1,5 +1,6 @@
-require 'uri'
+require 'json'
 require 'net/https'
+require 'uri'
 
 require 'capistrano/recipes/deploy/strategy/base'
 
