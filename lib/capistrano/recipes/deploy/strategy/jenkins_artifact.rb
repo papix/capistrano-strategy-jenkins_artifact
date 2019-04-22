@@ -28,12 +28,19 @@ class ::Capistrano::Deploy::Strategy::JenkinsArtifact < ::Capistrano::Deploy::St
   module Helpers
     def self.get_artifact_url_by_build(build, &finder)
       finder ||= ->(_) { true }
-      matched_artifact   = build['artifacts'].find(&finder)
+      matched_artifact = build['artifacts'].find(&finder)
       raise 'Specified artifact not found in current build !!' unless matched_artifact
       relative_build_path = matched_artifact['relativePath']
-      jenkins_path          = build['url']
-      artifact_path         = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
-      return artifact_path
+
+      if exists?(:s3_bucket_for_artifact) {
+        s3_bucket = fetch(:s3_bucket_for_artifact)
+        artifact_path = URI.escape("#{:s3_bucket_for_artifact}/#{relative_build_path}")
+        return artifact_path
+      else
+        jenkins_path  = build['url']
+        artifact_path = URI.escape("#{jenkins_path}artifact/#{relative_build_path}")
+        return artifact_path
+      end
     end
   end
 
